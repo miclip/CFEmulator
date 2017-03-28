@@ -70,6 +70,12 @@ type ProcessSpec struct {
 	Env  []string `json:"env"`
 }
 
+type ports struct {
+	HostPort      uint32 `json:"hostPort,omitempty"`
+	ContainerPort uint32 `json:"containerPort,omitempty"`
+	ErrorString   string `json:"error,omitempty"`
+}
+
 func newContainer(ip string, port string) *containerizer {
 	cmd := exec.Command(filepath.Join(containerdir, "containerizer.exe"), "--machineip", ip, "--port", port)
 	cmd.Stdout = os.Stdout
@@ -100,9 +106,9 @@ func (container *containerizer) deployApplication() error {
 	if err != nil {
 		return err
 	}
-	container.appPath = "app"
+	container.appPath = filepath.Join(container.containerDir, "1409DF6E45C1C89E09\\user\\WebApiMemoryLimit")
 	err = CopyDir(filepath.Join(container.containerDir, "env\\WebApiMemoryLimit"),
-		filepath.Join(container.containerDir, "1409DF6E45C1C89E09\\user\\app"))
+		container.appPath)
 	if err != nil {
 		return err
 	}
@@ -154,8 +160,8 @@ func (container *containerizer) stopContainerizer() error {
 func (container *containerizer) createContainer() error {
 	url := container.getURL("")
 	ContainerSpec := &ContainerSpec{Handle: "hwchandle", GraceTime: 300000000000,
-		Properties: map[string]string{"ContainerPort:2222": "64061", "ContainerPort:80": "8081"}, Env: nil,
-		Limits: &Limits{CPULimits: &CpuLimits{9999}, DiskLimits: &DiskLimits{ByteHard: 1073741824},
+		Properties: map[string]string{"ContainerPort:2222": "64061", "ContainerPort:8080": "64055"}, Env: nil,
+		Limits: &Limits{CPULimits: &CpuLimits{9999}, DiskLimits: &DiskLimits{ByteHard: 2073741824},
 			MemoryLimits: &MemoryLimits{LimitInBytes: 1073741824}}, BindMounts: &BindMounts{}}
 	b, err := json.Marshal(ContainerSpec)
 
@@ -174,10 +180,14 @@ func (container *containerizer) createContainer() error {
 }
 
 func (container *containerizer) runApplication() error {
+
+	err := container.netInRule()
+	CheckErr(err)
+
 	url := container.getWSURL("hwchandle/run")
 	origin := "http://localhost"
 	ProcessStreamEvent := &ProcessStreamEvent{MessageType: "run", ProcessSpec: &ProcessSpec{Path: container.execPath,
-		Args: []string{"-appRootPath", container.appPath}, Env: []string{"PORT=80"}}}
+		Args: []string{"-appRootPath", container.appPath}, Env: []string{"PORT=8080"}}}
 	b, err := json.Marshal(ProcessStreamEvent)
 
 	fmt.Printf("%s", b)
@@ -202,7 +212,7 @@ func (container *containerizer) runApplication() error {
 				return
 			}
 
-			fmt.Printf("ws recv: %s", message)
+			fmt.Println("ws recv: %s", message)
 		}
 	}()
 
@@ -240,6 +250,21 @@ func (container *containerizer) deleteContainer() error {
 	err = httpRequest(req)
 	CheckErr(err)
 	fmt.Println("Container Deleted")
+	return nil
+}
+
+func (container *containerizer) netInRule() error {
+	url := container.getURL("hwchandle/net/in")
+	netInRules := ports{HostPort: 64055, ContainerPort: 1788}
+	b, err := json.Marshal(netInRules)
+	CheckErr(err)
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(b))
+	req.Header.Set("Content-Type", "application/json")
+
+	err = httpRequest(req)
+	CheckErr(err)
+	fmt.Println("NetIn Rules Set")
 	return nil
 }
 

@@ -1,5 +1,5 @@
-// .\CFEmulator.exe --containerdir d:\containerizer --machineip . --containerport 1788
-
+// .\CFEmulator.exe --containerdir d:\containerizer --machineip 10.0.2.15 --containerport 1788
+//netsh http delete urlacl http://*:64055/
 package main
 
 import (
@@ -56,7 +56,7 @@ func main() {
 	err = container.deployApplication()
 	CheckErr(err)
 
-	//time.Sleep(60000 * time.Millisecond)
+	//time.Sleep(20000 * time.Millisecond)
 
 	err = container.runApplication()
 	CheckErr(err)
