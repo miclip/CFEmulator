@@ -101,14 +101,13 @@ func (container *containerizer) startContainerizer() error {
 	return nil
 }
 
-func (container *containerizer) deployApplication() error {
+func (container *containerizer) deployApplication(path string) error {
 	err := container.installHWC()
 	if err != nil {
 		return err
 	}
-	container.appPath = filepath.Join(container.containerDir, "1409DF6E45C1C89E09\\user\\WebApiMemoryLimit")
-	err = CopyDir(filepath.Join(container.containerDir, "env\\WebApiMemoryLimit"),
-		container.appPath)
+	container.appPath = filepath.Join(container.containerDir, "1409DF6E45C1C89E09\\user\\App")
+	err = CopyDir(path, container.appPath)
 	if err != nil {
 		return err
 	}
@@ -212,7 +211,7 @@ func (container *containerizer) runApplication() error {
 				return
 			}
 
-			fmt.Println("ws recv: %s", message)
+			fmt.Printf("ws recv: %s", message)
 		}
 	}()
 

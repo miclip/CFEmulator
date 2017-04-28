@@ -17,6 +17,7 @@ var (
 	machineip     string
 	containerdir  string
 	containerport string
+	path          string
 )
 
 const (
@@ -37,6 +38,7 @@ const (
 )
 
 func init() {
+	flag.StringVar(&path, "path", "", "Path to application")
 	flag.StringVar(&containerdir, "containerdir", "c:\\containerizer", "containerizer directory")
 	flag.StringVar(&machineip, "machineip", ".", "machine IP address")
 	flag.StringVar(&containerport, "containerport", "1788", "containerizer port")
@@ -53,10 +55,8 @@ func main() {
 	err = container.createContainer()
 	CheckErr(err)
 
-	err = container.deployApplication()
+	err = container.deployApplication(path)
 	CheckErr(err)
-
-	//time.Sleep(20000 * time.Millisecond)
 
 	err = container.runApplication()
 	CheckErr(err)
